@@ -89,7 +89,8 @@ id задачи, название задачи, username_id, username, дата 
 - user_tasks - результаты проверки задачи пользователя (задача принята/нет) и т.д.
 
 Итог:
-(db.png)
+
+![db.png](https://gitlab.platforma.institute/mikhail.medvedew/project-2024/-/blob/main/db.png "db.png")
 
 ## Сущности
 
