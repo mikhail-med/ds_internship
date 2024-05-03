@@ -1,27 +1,30 @@
 package ru.ds.edu.medvedew.internship.security;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
+import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.repositories.UserRepository;
+
+import java.util.Optional;
 
 /**
  * Проверят то, что пользователь хочет изменить данные принадлежащие этому пользователю
  */
 @Component("userIdValidator")
 @RequiredArgsConstructor
+@Slf4j
 public class UserIdValidator {
     private final UserRepository userRepository;
 
     public boolean isSameId(Authentication authentication, Integer id) {
-        // ControllerAdvice с ExceptionHandler не поймают это исключение,
-        // так что ещё подумаю как сделать
-        int authenticatedUserId = userRepository.findByUsername(authentication.getName()).orElseThrow(() ->
-                        new ResourceNotFoundException(String.format("User with username %s not found",
-                                authentication.getName())))
-                .getId();
+        Optional<User> authenticatedUser = userRepository.findByUsername(authentication.getName());
+        if (authenticatedUser.isEmpty()) {
+            log.warn("Anonymous user tried to access data of user with id {}", id);
+            return false;
+        }
 
-        return id == authenticatedUserId;
+        return id == authenticatedUser.get().getId();
     }
 }
