@@ -5,15 +5,20 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import ru.ds.edu.medvedew.internship.exceptions.ResourceCantBeUpdated;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.Internship;
+import ru.ds.edu.medvedew.internship.models.Lesson;
+import ru.ds.edu.medvedew.internship.models.User;
+import ru.ds.edu.medvedew.internship.models.UserInternship;
+import ru.ds.edu.medvedew.internship.models.statuses.UserInternshipStatus;
 import ru.ds.edu.medvedew.internship.repositories.InternshipRepository;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -24,6 +29,12 @@ class InternshipServiceTest {
 
     @MockBean
     private InternshipRepository internshipRepository;
+
+    @MockBean
+    private UserService userService;
+
+    @MockBean
+    private UserInternshipService userInternshipService;
 
 
     @Test
@@ -93,5 +104,92 @@ class InternshipServiceTest {
     void delete() {
         internshipService.delete(1);
         Mockito.verify(internshipRepository, Mockito.times(1)).deleteById(1);
+    }
+
+    @Test
+    public void addUserToInternship() {
+        Internship internship = new Internship();
+        internship.setId(1);
+        internship.setApplicationsDeadline(Date.from(LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()));
+        User userAlreadyParticipant = new User();
+        userAlreadyParticipant.setId(1);
+        Set<User> participants = new HashSet<>(Set.of(userAlreadyParticipant));
+        internship.setParticipants(participants);
+        doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
+
+        User userToAdd = new User();
+        userToAdd.setId(2);
+        doReturn(userToAdd).when(userService).getById(2);
+
+        internshipService.addUserToInternship(2, 1);
+
+        Mockito.verify(userInternshipService, Mockito.times(1)).save(new UserInternship(userToAdd, internship,
+                UserInternshipStatus.SUBMITTED_APPLICATION));
+    }
+
+    @Test
+    public void addUserToInternshipWithExpiredApplicationsDate() {
+        Internship internship = new Internship();
+        internship.setApplicationsDeadline(Date.from(LocalDateTime.now().minusHours(1).atZone(ZoneId.systemDefault()).toInstant()));
+        User userAlreadyParticipant = new User();
+        userAlreadyParticipant.setId(1);
+        Set<User> participants = new HashSet<>(Set.of(userAlreadyParticipant));
+        internship.setParticipants(participants);
+        doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
+
+        User userToAdd = new User();
+        userToAdd.setId(2);
+        doReturn(userToAdd).when(userService).getById(2);
+
+        assertThrows(ResourceCantBeUpdated.class, () ->
+                internshipService.addUserToInternship(2, 1));
+
+        assertEquals(1, internship.getParticipants().size());
+        assertFalse(internship.getParticipants().stream().anyMatch(u -> u.getId() == 2));
+    }
+
+    @Test
+    public void addUserToInternshipAlreadyParticipated() {
+        Internship internship = new Internship();
+        internship.setApplicationsDeadline(Date.from(LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()));
+        User userAlreadyParticipant = new User();
+        userAlreadyParticipant.setId(1);
+        Set<User> participants = new HashSet<>(Set.of(userAlreadyParticipant));
+        internship.setParticipants(participants);
+        doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
+
+        User userToAdd = new User();
+        userToAdd.setId(1);
+        doReturn(userToAdd).when(userService).getById(1);
+
+        assertThrows(ResourceCantBeUpdated.class, () ->
+                internshipService.addUserToInternship(1, 1));
+
+        assertEquals(1, internship.getParticipants().size());
+        assertTrue(internship.getParticipants().stream().anyMatch(u -> u.getId() == 1));
+    }
+
+    @Test
+    public void getAllParticipants() {
+        Internship internship = new Internship();
+        User userAlreadyParticipant = new User();
+        userAlreadyParticipant.setId(1);
+        Set<User> participants = new HashSet<>(Set.of(userAlreadyParticipant));
+        internship.setParticipants(participants);
+        doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
+
+        assertEquals(1, internshipService.getAllParticipants(1).size());
+    }
+
+    @Test
+    public void getAllLessons() {
+        Internship internship = new Internship();
+        Lesson internshipLesson = new Lesson();
+        internshipLesson.setId(1);
+        Set<Lesson> lessons = new HashSet<>(Set.of(internshipLesson));
+        internship.setLessons(lessons);
+        doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
+
+        assertEquals(1, internshipService.getAllLessons(1).size());
     }
 }

@@ -30,6 +30,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/v1/users").permitAll()
                 .antMatchers("/v1/users/{userId}").access("hasRole('ADMIN') or @userIdValidator.isSameId(authentication,#userId)")
+                .antMatchers("/v1/internships/{id}/user/{userId}").access("hasRole('ADMIN') or @userIdValidator.isSameId(authentication,#userId)")
                 .anyRequest().hasRole("ADMIN")
                 .and().httpBasic()
                 .and()
