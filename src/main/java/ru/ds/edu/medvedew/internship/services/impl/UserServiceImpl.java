@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.User;
-import ru.ds.edu.medvedew.internship.models.statuses.UserStatus;
 import ru.ds.edu.medvedew.internship.repositories.UserRepository;
 import ru.ds.edu.medvedew.internship.services.UserService;
 
@@ -33,9 +32,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User save(User user) {
-        if (user.getStatus() == null) {
-            user.setStatus(UserStatus.SUBMITTED_APPLICATION);
-        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }

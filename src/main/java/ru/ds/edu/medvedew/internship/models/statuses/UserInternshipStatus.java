@@ -3,7 +3,7 @@ package ru.ds.edu.medvedew.internship.models.statuses;
 /**
  * Возможные состояния пользователя
  */
-public enum UserStatus {
+public enum UserInternshipStatus {
     /**
      * Отправил заявку
      */

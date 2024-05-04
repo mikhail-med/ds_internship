@@ -2,7 +2,7 @@ package ru.ds.edu.medvedew.internship.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
-import ru.ds.edu.medvedew.internship.models.statuses.UserStatus;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -49,10 +49,6 @@ public class User {
     )
     private Education education;
 
-    @Column(name = "status")
-    @Enumerated(EnumType.STRING)
-    private UserStatus status;
-
     @Column(name = "password")
     private String password;
 
@@ -68,6 +64,10 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<UserTask> userTasks;
+
+    @OneToMany(mappedBy = "user")
+    @EqualsAndHashCode.Exclude
+    private Set<UserInternship> userInternships;
 
     @OneToMany(mappedBy = "sender")
     private Set<Message> sentMessages;

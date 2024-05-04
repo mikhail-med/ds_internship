@@ -1,6 +1,7 @@
 package ru.ds.edu.medvedew.internship.models;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ru.ds.edu.medvedew.internship.models.statuses.InternshipStatus;
 
 import javax.persistence.*;
@@ -42,12 +43,17 @@ public class Internship {
     private Date applicationsDeadline;
 
     @OneToMany(mappedBy = "internship")
-    private List<Lesson> lessons;
+    private Set<Lesson> lessons;
+
+    @OneToMany(mappedBy = "internship")
+    @EqualsAndHashCode.Exclude
+    private List<UserInternship> users;
 
     @ManyToMany
     @JoinTable(name = "user_internships",
             joinColumns = @JoinColumn(name = "internship_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @EqualsAndHashCode.Exclude
     private Set<User> participants;
 
     @Column(name = "status")
