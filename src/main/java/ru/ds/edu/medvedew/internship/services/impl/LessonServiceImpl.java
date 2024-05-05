@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.Lesson;
+import ru.ds.edu.medvedew.internship.models.Task;
 import ru.ds.edu.medvedew.internship.repositories.LessonRepository;
 import ru.ds.edu.medvedew.internship.services.LessonService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -48,5 +50,11 @@ public class LessonServiceImpl implements LessonService {
     @Override
     public void delete(int id) {
         lessonRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Task> getAllTasksForLesson(int lessonId) {
+        Lesson lesson = getById(lessonId);
+        return new ArrayList<>(lesson.getTask());
     }
 }

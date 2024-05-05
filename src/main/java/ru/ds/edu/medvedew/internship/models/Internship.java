@@ -43,6 +43,7 @@ public class Internship {
     private Date applicationsDeadline;
 
     @OneToMany(mappedBy = "internship")
+    @EqualsAndHashCode.Exclude
     private Set<Lesson> lessons;
 
     @OneToMany(mappedBy = "internship")

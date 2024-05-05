@@ -7,9 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ds.edu.medvedew.internship.dto.LessonDto;
+import ru.ds.edu.medvedew.internship.dto.TaskDto;
 import ru.ds.edu.medvedew.internship.models.Lesson;
 import ru.ds.edu.medvedew.internship.services.LessonService;
 import ru.ds.edu.medvedew.internship.utils.mappers.LessonMapper;
+import ru.ds.edu.medvedew.internship.utils.mappers.TaskMapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class LessonController {
     private final LessonService lessonService;
     private final LessonMapper LESSON_MAPPER = LessonMapper.MAPPER;
+    private final TaskMapper TASK_MAPPER = TaskMapper.MAPPER;
 
     @GetMapping
     @ApiOperation("Получить все занятия")
@@ -56,5 +59,13 @@ public class LessonController {
     @ApiOperation("Удалить иноформацию о занятии")
     public void delete(@PathVariable int id) {
         lessonService.delete(id);
+    }
+
+    @GetMapping("/{id}/tasks")
+    @ApiOperation("Получить все задачи занятия")
+    public List<TaskDto> getAllTasksForLesson(@PathVariable int id) {
+        return lessonService.getAllTasksForLesson(id).stream()
+                .map(TASK_MAPPER::toTaskDto)
+                .collect(Collectors.toList());
     }
 }
