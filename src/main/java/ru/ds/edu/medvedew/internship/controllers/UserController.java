@@ -6,9 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.ds.edu.medvedew.internship.dto.MessageDto;
 import ru.ds.edu.medvedew.internship.dto.UserDto;
 import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.services.UserService;
+import ru.ds.edu.medvedew.internship.utils.mappers.MessageMapper;
 import ru.ds.edu.medvedew.internship.utils.mappers.UserMapper;
 
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserController {
     private final UserService userService;
     private final UserMapper USER_MAPPER = UserMapper.MAPPER;
+    private final MessageMapper MESSAGE_MAPPER = MessageMapper.MAPPER;
 
     @GetMapping
     @ApiOperation("Получить всех пользователей")
@@ -57,4 +60,29 @@ public class UserController {
     public void delete(@PathVariable int id) {
         userService.delete(id);
     }
+
+    @GetMapping("/{id}/messages")
+    @ApiOperation("Получить сообщения пользователя (отправленные и полученные)")
+    public List<MessageDto> getAllUserMessages(@PathVariable int id) {
+        return userService.getAllMessagesForUser(id).stream()
+                .map(MESSAGE_MAPPER::toMessageDto)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}/sent-messages")
+    @ApiOperation("Получить сообщения отправленные пользователем")
+    public List<MessageDto> getAllUserSentMessages(@PathVariable int id) {
+        return userService.getAllMessagesSentByUser(id).stream()
+                .map(MESSAGE_MAPPER::toMessageDto)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}/received-messages")
+    @ApiOperation("Получить сообщения полученные пользователем")
+    public List<MessageDto> getAllUserReceivedMessages(@PathVariable int id) {
+        return userService.getAllMessageReceivedByUser(id).stream()
+                .map(MESSAGE_MAPPER::toMessageDto)
+                .collect(Collectors.toList());
+    }
+
 }

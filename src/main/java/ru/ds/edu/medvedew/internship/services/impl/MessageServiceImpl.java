@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.Message;
+import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.repositories.MessageRepository;
 import ru.ds.edu.medvedew.internship.services.MessageService;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -47,5 +49,27 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public void delete(int id) {
         messageRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Message> getAllMessagesBetweenUsers(int firstUserId, int secondUserId) {
+        return messageRepository.findAllBetweenUsers(firstUserId, secondUserId);
+    }
+
+    @Transactional
+    @Override
+    public Message sendMessageFromUserToUserWithText(int senderId, int consumerId, String text) {
+        Message message = new Message();
+        User sender = new User();
+        sender.setId(senderId);
+        message.setSender(sender);
+
+        User consumer = new User();
+        consumer.setId(consumerId);
+        message.setConsumer(consumer);
+
+        message.setMessage(text);
+        message.setOnMoment(new Date());
+        return messageRepository.save(message);
     }
 }

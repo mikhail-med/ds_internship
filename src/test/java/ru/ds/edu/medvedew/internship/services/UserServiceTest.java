@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
+import ru.ds.edu.medvedew.internship.models.Message;
 import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.repositories.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -94,5 +96,53 @@ class UserServiceTest {
     void delete() {
         userService.delete(1);
         Mockito.verify(userRepository, Mockito.times(1)).deleteById(1);
+    }
+
+
+    @Test
+    public void getAllMessagesForUser() {
+        User user = new User();
+        user.setId(1);
+        Message m1 = new Message();
+        m1.setId(1);
+        Message m2 = new Message();
+        m2.setId(2);
+        user.setSentMessages(Set.of(m1));
+        user.setReceivedMessages(Set.of(m2));
+        doReturn(Optional.of(user)).when(userRepository).findById(1);
+        assertEquals(2, userService.getAllMessagesForUser(1).size());
+    }
+
+    @Test
+    public void getAllMessagesForNotExistingUser() {
+        doReturn(Optional.empty()).when(userRepository).findById(1);
+        assertThrows(ResourceNotFoundException.class, () ->
+                userService.getAllMessagesForUser(1));
+    }
+
+    @Test
+    public void getAllMessagesSentByUser() {
+        User user = new User();
+        user.setId(1);
+        Message m1 = new Message();
+        m1.setId(1);
+        Message m2 = new Message();
+        m2.setId(2);
+        user.setSentMessages(Set.of(m1, m2));
+        doReturn(Optional.of(user)).when(userRepository).findById(1);
+        assertEquals(2, userService.getAllMessagesSentByUser(1).size());
+    }
+
+    @Test
+    public void getAllMessageReceivedByUser() {
+        User user = new User();
+        user.setId(1);
+        Message m1 = new Message();
+        m1.setId(1);
+        Message m2 = new Message();
+        m2.setId(2);
+        user.setReceivedMessages(Set.of(m2, m1));
+        doReturn(Optional.of(user)).when(userRepository).findById(1);
+        assertEquals(2, userService.getAllMessageReceivedByUser(1).size());
     }
 }

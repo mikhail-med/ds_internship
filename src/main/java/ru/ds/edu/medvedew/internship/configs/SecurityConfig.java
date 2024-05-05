@@ -29,8 +29,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/v1/users").permitAll()
-                .antMatchers("/v1/users/{userId}").access("hasRole('ADMIN') or @userIdValidator.isSameId(authentication,#userId)")
-                .antMatchers("/v1/internships/{id}/user/{userId}").access("hasRole('ADMIN') or @userIdValidator.isSameId(authentication,#userId)")
+                .antMatchers("/v1/users/{userId}",
+                        "/v1/internships/{id}/user/{userId}",
+                        "/v1/users/{userId}/messages",
+                        "/v1/users/{userId}/sent-messages",
+                        "/v1/users/{userId}/received-messages",
+                        "/v1/messages/{userId}/chat-with/{secondUserId}",
+                        "/v1/messages/{userId}/chat-to/{secondUserId}")
+                .access("hasRole('ADMIN') or @userIdValidator.isSameId(authentication,#userId)")
                 .anyRequest().hasRole("ADMIN")
                 .and().httpBasic()
                 .and()

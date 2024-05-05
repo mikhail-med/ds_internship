@@ -6,9 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
-import ru.ds.edu.medvedew.internship.models.Lesson;
 import ru.ds.edu.medvedew.internship.models.Message;
-import ru.ds.edu.medvedew.internship.repositories.LessonRepository;
 import ru.ds.edu.medvedew.internship.repositories.MessageRepository;
 
 import java.util.List;
@@ -16,6 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -96,4 +95,25 @@ class MessageServiceTest {
         messageService.delete(1);
         Mockito.verify(messageRepository, Mockito.times(1)).deleteById(1);
     }
+
+    @Test
+    public void getAllMessagesBetweenUsers() {
+        doReturn(List.of(new Message())).when(messageRepository).findAllBetweenUsers(1, 2);
+
+        messageService.getAllMessagesBetweenUsers(1, 2);
+
+        Mockito.verify(messageRepository, Mockito.times(1)).findAllBetweenUsers(1, 2);
+    }
+
+    @Test
+    public void sendMessageFromUserToUserWithText() {
+        doReturn(new Message()).when(messageRepository).save(new Message());
+        messageService.sendMessageFromUserToUserWithText(1, 2, "text");
+
+        Mockito.verify(messageRepository).save(argThat(message -> {
+            return message.getSender().getId() == 1 && message.getConsumer().getId() == 2
+                    && message.getMessage().equals("text");
+        }));
+    }
+
 }

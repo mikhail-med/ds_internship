@@ -70,8 +70,10 @@ public class User {
     private Set<UserInternship> userInternships;
 
     @OneToMany(mappedBy = "sender")
+    @EqualsAndHashCode.Exclude
     private Set<Message> sentMessages;
 
     @OneToMany(mappedBy = "consumer")
+    @EqualsAndHashCode.Exclude
     private Set<Message> receivedMessages;
 }

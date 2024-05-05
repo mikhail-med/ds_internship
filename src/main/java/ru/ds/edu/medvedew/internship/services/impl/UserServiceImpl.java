@@ -5,10 +5,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
+import ru.ds.edu.medvedew.internship.models.Message;
 import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.repositories.UserRepository;
 import ru.ds.edu.medvedew.internship.services.UserService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -51,4 +53,26 @@ public class UserServiceImpl implements UserService {
     public void delete(int id) {
         userRepository.deleteById(id);
     }
+
+    @Override
+    public List<Message> getAllMessagesForUser(int userId) {
+        User user = getById(userId);
+        List<Message> allMessages = new ArrayList<>();
+        allMessages.addAll(user.getSentMessages());
+        allMessages.addAll(user.getReceivedMessages());
+        return allMessages;
+    }
+
+    @Override
+    public List<Message> getAllMessagesSentByUser(int userId) {
+        User user = getById(userId);
+        return new ArrayList<>(user.getSentMessages());
+    }
+
+    @Override
+    public List<Message> getAllMessageReceivedByUser(int userId) {
+        User user = getById(userId);
+        return new ArrayList<>(user.getReceivedMessages());
+    }
+
 }
