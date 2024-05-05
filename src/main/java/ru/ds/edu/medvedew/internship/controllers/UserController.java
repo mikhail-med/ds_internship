@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.ds.edu.medvedew.internship.dto.InternshipDto;
 import ru.ds.edu.medvedew.internship.dto.MessageDto;
 import ru.ds.edu.medvedew.internship.dto.UserDto;
 import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.services.UserService;
+import ru.ds.edu.medvedew.internship.utils.mappers.InternshipMapper;
 import ru.ds.edu.medvedew.internship.utils.mappers.MessageMapper;
 import ru.ds.edu.medvedew.internship.utils.mappers.UserMapper;
 
@@ -24,6 +26,7 @@ public class UserController {
     private final UserService userService;
     private final UserMapper USER_MAPPER = UserMapper.MAPPER;
     private final MessageMapper MESSAGE_MAPPER = MessageMapper.MAPPER;
+    private final InternshipMapper INTERNSHIP_MAPPER = InternshipMapper.MAPPER;
 
     @GetMapping
     @ApiOperation("Получить всех пользователей")
@@ -85,4 +88,11 @@ public class UserController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/{id}/internships")
+    @ApiOperation("Получить стажировки пользователя")
+    public List<InternshipDto> getUserInternships(@PathVariable int id) {
+        return userService.getAllUserInternships(id).stream()
+                .map(INTERNSHIP_MAPPER::toInternshipDto)
+                .collect(Collectors.toList());
+    }
 }

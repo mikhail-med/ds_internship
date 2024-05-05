@@ -1,5 +1,6 @@
 package ru.ds.edu.medvedew.internship.services;
 
+import ru.ds.edu.medvedew.internship.models.Internship;
 import ru.ds.edu.medvedew.internship.models.Message;
 import ru.ds.edu.medvedew.internship.models.User;
 
@@ -37,4 +38,9 @@ public interface UserService {
      */
     List<Message> getAllMessageReceivedByUser(int userId);
 
+    /**
+     * @param id - id пользователя
+     * @return все стажировки в которых пользователь учавствовал/ подавал заявку
+     */
+    List<Internship> getAllUserInternships(int id);
 }

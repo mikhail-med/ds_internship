@@ -35,7 +35,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         "/v1/users/{userId}/sent-messages",
                         "/v1/users/{userId}/received-messages",
                         "/v1/messages/{userId}/chat-with/{secondUserId}",
-                        "/v1/messages/{userId}/chat-to/{secondUserId}")
+                        "/v1/messages/{userId}/chat-to/{secondUserId}",
+                        "/v1/users/{userId}/internships")
                 .access("hasRole('ADMIN') or @userIdValidator.isSameId(authentication,#userId)")
                 .anyRequest().hasRole("ADMIN")
                 .and().httpBasic()

@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
+import ru.ds.edu.medvedew.internship.models.Internship;
 import ru.ds.edu.medvedew.internship.models.Message;
 import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.repositories.UserRepository;
@@ -73,6 +74,12 @@ public class UserServiceImpl implements UserService {
     public List<Message> getAllMessageReceivedByUser(int userId) {
         User user = getById(userId);
         return new ArrayList<>(user.getReceivedMessages());
+    }
+
+    @Override
+    public List<Internship> getAllUserInternships(int id) {
+        User user = getById(id);
+        return new ArrayList<>(user.getInternships());
     }
 
 }
