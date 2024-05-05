@@ -43,4 +43,11 @@ public interface UserService {
      * @return все стажировки в которых пользователь учавствовал/ подавал заявку
      */
     List<Internship> getAllUserInternships(int id);
+
+    /**
+     * Добавить пользователю роль
+     * @param roleId - роль
+     * @param id     - id пользователя
+     */
+    void addRoleToUser(int roleId, int id);
 }

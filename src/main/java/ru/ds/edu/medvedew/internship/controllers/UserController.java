@@ -95,4 +95,10 @@ public class UserController {
                 .map(INTERNSHIP_MAPPER::toInternshipDto)
                 .collect(Collectors.toList());
     }
+
+    @PostMapping("/{userId}/role/{roleId}")
+    @ApiOperation("Добавить пользователю роль по id")
+    public void addRoleToUser(@PathVariable("userId") int userId, @PathVariable("roleId") int roleId) {
+        userService.addRoleToUser(roleId, userId);
+    }
 }

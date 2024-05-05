@@ -7,12 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.Internship;
 import ru.ds.edu.medvedew.internship.models.Message;
+import ru.ds.edu.medvedew.internship.models.Role;
 import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.repositories.UserRepository;
+import ru.ds.edu.medvedew.internship.services.RoleService;
 import ru.ds.edu.medvedew.internship.services.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -20,6 +23,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleService roleService;
 
     @Override
     public List<User> getAll() {
@@ -80,6 +84,16 @@ public class UserServiceImpl implements UserService {
     public List<Internship> getAllUserInternships(int id) {
         User user = getById(id);
         return new ArrayList<>(user.getInternships());
+    }
+
+    @Transactional
+    @Override
+    public void addRoleToUser(int roleId, int userId) {
+        User user = getById(userId);
+        Role role = roleService.getById(roleId);
+        Set<Role> userRoles = user.getRoles();
+        userRoles.add(role);
+        userRepository.save(user);
     }
 
 }
