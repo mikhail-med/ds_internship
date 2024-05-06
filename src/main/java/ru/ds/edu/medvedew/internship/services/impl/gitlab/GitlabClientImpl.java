@@ -8,6 +8,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabUserCreateDto;
+import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabUserDto;
 import ru.ds.edu.medvedew.internship.dto.gitlab.ProjectDto;
 import ru.ds.edu.medvedew.internship.services.gitlab.GitlabClient;
 
@@ -43,5 +45,34 @@ public class GitlabClientImpl implements GitlabClient {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean createUser(String name, String username, String email, String password, String privateToken) {
+        String url = gitlabUrl + "/api/v4/users";
+        GitlabUserCreateDto gitlabUserCreateDto = getDto(name, username, email, password);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("PRIVATE-TOKEN", privateToken);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(gitlabUserCreateDto, httpHeaders),
+                    GitlabUserDto.class);
+        } catch (Exception e) {
+            log.error("Create gitlab user for user with username {} went wrong. Exception: {}", username,
+                    e.getMessage());
+            return false;
+        }
+
+        return true;
+    }
+
+    private GitlabUserCreateDto getDto(String name, String username, String email, String password) {
+        GitlabUserCreateDto gitlabUserCreateDto = new GitlabUserCreateDto();
+        gitlabUserCreateDto.setName(name);
+        gitlabUserCreateDto.setEmail(email);
+        gitlabUserCreateDto.setUsername(username);
+        gitlabUserCreateDto.setPassword(password);
+        return gitlabUserCreateDto;
     }
 }

@@ -13,4 +13,15 @@ public interface GitlabClient {
      */
     boolean forkProject(String projectPathWithNamespace, String toNamespace, String privateToken);
 
+    /**
+     * Создание gitlab пользователя
+     *
+     * @param name
+     * @param username
+     * @param email
+     * @param password
+     * @param privateToken- private token для доступа к gitlab
+     * @return true - если выполнено успешно, false - если произошла ошибка
+     */
+    boolean createUser(String name, String username, String email, String password, String privateToken);
 }

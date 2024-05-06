@@ -14,4 +14,14 @@ public interface GitlabService {
      * @param privateToken - token для доступа к gitlab
      */
     void publishLesson(int lessonId, String privateToken);
+
+    /**
+     * Создание аккаунта пользователя в gitlab.
+     * До пользователя (для которого создаётся аккаунт) должен быть доведён пароль / ссылка.
+     * Реализация сама определяет какаим образом пользователь получит пароль, но это должно произойти.
+     *
+     * @param userId       - id пользователя стажировки
+     * @param privateToken - token для доступа к gitlab
+     */
+    void createGitlabAccountForUser(int userId, String privateToken);
 }
