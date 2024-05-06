@@ -1,0 +1,8 @@
+spring.application.name=internship
+
+#datasource
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.datasource.url=jdbc:postgresql://postgres.internship:5432/internship
+spring.datasource.username=internship-service
+spring.datasource.password=qwerty123
+spring.jpa.properties.hibernate.default_schema=internship
