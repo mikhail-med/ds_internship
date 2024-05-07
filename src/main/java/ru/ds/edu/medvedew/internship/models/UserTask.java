@@ -36,4 +36,8 @@ public class UserTask {
     @Column(name = "on_moment")
     @Temporal(TemporalType.TIMESTAMP)
     private Date onMoment;
+
+    @Column(name = "commit_created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date commitCreatedAt;
 }

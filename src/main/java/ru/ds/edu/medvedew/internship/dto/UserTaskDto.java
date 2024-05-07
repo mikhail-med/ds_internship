@@ -19,4 +19,6 @@ public class UserTaskDto {
     private String comment;
     @ApiModelProperty("Время проверки задачи")
     private Date onMoment;
+    @ApiModelProperty("Время проверки задачи")
+    private Date commitCreatedAt;
 }
