@@ -3,11 +3,14 @@ package ru.ds.edu.medvedew.internship.services.impl.gitlab;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabCommit;
 import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabUserCreateDto;
 import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabUserDto;
 import ru.ds.edu.medvedew.internship.dto.gitlab.ProjectDto;
@@ -16,6 +19,7 @@ import ru.ds.edu.medvedew.internship.services.gitlab.GitlabClient;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -65,6 +69,27 @@ public class GitlabClientImpl implements GitlabClient {
         }
 
         return true;
+    }
+
+    @Override
+    public List<GitlabCommit> getCommitsForProject(String projectPathWithNamespace, String privateToken) {
+        String projectPathEncoded = URLEncoder.encode(projectPathWithNamespace, StandardCharsets.UTF_8);
+        String url = gitlabUrl + "/api/v4/projects/" + projectPathEncoded + "/repository/commits";
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("PRIVATE-TOKEN", privateToken);
+
+        try {
+            ResponseEntity<List<GitlabCommit>> commits = restTemplate.exchange(URI.create(url), HttpMethod.GET,
+                    new HttpEntity<>(httpHeaders),
+                    new ParameterizedTypeReference<>() {
+                    });
+            return commits.getBody();
+        } catch (Exception e) {
+            log.error("Get gitlab repository commits with path {} went wrong. Exception: {}", projectPathEncoded,
+                    e.getMessage());
+            return null;
+        }
     }
 
     private GitlabUserCreateDto getDto(String name, String username, String email, String password) {

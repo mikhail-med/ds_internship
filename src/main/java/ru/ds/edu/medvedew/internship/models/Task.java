@@ -1,6 +1,7 @@
 package ru.ds.edu.medvedew.internship.models;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -28,6 +29,7 @@ public class Task {
     private Lesson lesson;
 
     @OneToMany(mappedBy = "task")
+    @EqualsAndHashCode.Exclude
     private Set<UserTask> userTasks;
 
 }

@@ -60,9 +60,11 @@ public class User {
     private Set<Role> roles;
 
     @ManyToMany(mappedBy = "participants")
+    @EqualsAndHashCode.Exclude
     private Set<Internship> internships;
 
     @OneToMany(mappedBy = "user")
+    @EqualsAndHashCode.Exclude
     private Set<UserTask> userTasks;
 
     @OneToMany(mappedBy = "user")

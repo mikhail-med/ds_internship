@@ -48,4 +48,9 @@ public class UserTaskServiceImpl implements UserTaskService {
     public void delete(int id) {
         userTaskRepository.deleteById(id);
     }
+
+    @Override
+    public List<UserTask> getAllForLesson(int lessonId) {
+        return userTaskRepository.findAllByLessonId(lessonId);
+    }
 }

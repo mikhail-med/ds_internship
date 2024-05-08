@@ -1,5 +1,9 @@
 package ru.ds.edu.medvedew.internship.services.gitlab;
 
+import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabCommit;
+
+import java.util.List;
+
 /**
  * Компонент для отправки запросов к gitlab.
  */
@@ -24,4 +28,11 @@ public interface GitlabClient {
      * @return true - если выполнено успешно, false - если произошла ошибка
      */
     boolean createUser(String name, String username, String email, String password, String privateToken);
+
+    /**
+     * @param projectPathWithNamespace - путь к проекту (пользователь/имя поекта), например - 'user/project'
+     * @param privateToken             - private token для доступа к gitlab
+     * @return список коммитов, null - если произошла какая то ошибка
+     */
+    List<GitlabCommit> getCommitsForProject(String projectPathWithNamespace, String privateToken);
 }

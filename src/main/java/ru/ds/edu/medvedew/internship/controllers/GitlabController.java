@@ -4,7 +4,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.ds.edu.medvedew.internship.dto.UserTaskCommit;
 import ru.ds.edu.medvedew.internship.services.gitlab.GitlabService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/gitlab")
@@ -23,5 +26,11 @@ public class GitlabController {
     @ApiOperation("Создание пользователя в gitlab по id юзера стажировки")
     public void createGitlabUser(@PathVariable int id, @RequestHeader("PRIVATE-TOKEN") String privateToken) {
         gitlabService.createGitlabAccountForUser(id, privateToken);
+    }
+
+    @GetMapping("/lessons/{id}/tasks/last-commits")
+    @ApiOperation("Получить свежие коммиты для непрооверенных или непринятых решений задач некоторого занятия")
+    public List<UserTaskCommit> getNewCommits(@PathVariable int id, @RequestHeader("PRIVATE-TOKEN") String privateToken) {
+        return gitlabService.getNewUncheckedCommitsForLesson(id, privateToken);
     }
 }

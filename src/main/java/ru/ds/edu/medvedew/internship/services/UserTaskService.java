@@ -17,4 +17,10 @@ public interface UserTaskService {
     UserTask update(int id, UserTask userTask);
 
     void delete(int id);
+
+    /**
+     * @param lessonId - id занятия
+     * @return результаты проверки задач для некоторого занятия
+     */
+    List<UserTask> getAllForLesson(int lessonId);
 }
