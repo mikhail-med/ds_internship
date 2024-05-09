@@ -38,9 +38,7 @@ public class MessageServiceImpl implements MessageService {
     @Transactional
     @Override
     public Message update(int id, Message message) {
-        if (!messageRepository.existsById(id)) {
-            throw new ResourceNotFoundException(String.format("Message with id %d doesn't exists", id));
-        }
+        checkMessageExists(id);
         message.setId(id);
         return messageRepository.save(message);
     }
@@ -48,6 +46,7 @@ public class MessageServiceImpl implements MessageService {
     @Transactional
     @Override
     public void delete(int id) {
+        checkMessageExists(id);
         messageRepository.deleteById(id);
     }
 
@@ -72,4 +71,11 @@ public class MessageServiceImpl implements MessageService {
         message.setOnMoment(new Date());
         return messageRepository.save(message);
     }
+
+    private void checkMessageExists(int messageId) {
+        if (!messageRepository.existsById(messageId)) {
+            throw new ResourceNotFoundException(String.format("Message with id %d doesn't exists", messageId));
+        }
+    }
+
 }

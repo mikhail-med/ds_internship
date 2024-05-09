@@ -39,9 +39,7 @@ public class LessonServiceImpl implements LessonService {
     @Transactional
     @Override
     public Lesson update(int id, Lesson lesson) {
-        if (!lessonRepository.existsById(id)) {
-            throw new ResourceNotFoundException(String.format("Lesson with id %d doesn't exists", id));
-        }
+        checkLessonExists(id);
         lesson.setId(id);
         return lessonRepository.save(lesson);
     }
@@ -49,6 +47,7 @@ public class LessonServiceImpl implements LessonService {
     @Transactional
     @Override
     public void delete(int id) {
+        checkLessonExists(id);
         lessonRepository.deleteById(id);
     }
 
@@ -56,5 +55,11 @@ public class LessonServiceImpl implements LessonService {
     public List<Task> getAllTasksForLesson(int lessonId) {
         Lesson lesson = getById(lessonId);
         return new ArrayList<>(lesson.getTask());
+    }
+
+    private void checkLessonExists(int lessonId) {
+        if (!lessonRepository.existsById(lessonId)) {
+            throw new ResourceNotFoundException(String.format("Lesson with id %d doesn't exists", lessonId));
+        }
     }
 }

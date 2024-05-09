@@ -36,9 +36,7 @@ public class UserTaskServiceImpl implements UserTaskService {
     @Transactional
     @Override
     public UserTask update(int id, UserTask userTask) {
-        if (!userTaskRepository.existsById(id)) {
-            throw new ResourceNotFoundException(String.format("User task with id %d doesn't exists", id));
-        }
+        checkUserTaskExists(id);
         userTask.setId(id);
         return userTaskRepository.save(userTask);
     }
@@ -46,11 +44,19 @@ public class UserTaskServiceImpl implements UserTaskService {
     @Transactional
     @Override
     public void delete(int id) {
+        checkUserTaskExists(id);
         userTaskRepository.deleteById(id);
     }
 
     @Override
     public List<UserTask> getAllForLesson(int lessonId) {
         return userTaskRepository.findAllByLessonId(lessonId);
+    }
+
+    private void checkUserTaskExists(int userTaskId) {
+        if (!userTaskRepository.existsById(userTaskId)) {
+            throw new ResourceNotFoundException(String.format("User task with id %d doesn't exists",
+                    userTaskId));
+        }
     }
 }

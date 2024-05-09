@@ -49,9 +49,7 @@ public class InternshipServiceImpl implements InternshipService {
     @Transactional
     @Override
     public Internship update(int id, Internship internship) {
-        if (!internshipRepository.existsById(id)) {
-            throw new ResourceNotFoundException(String.format("Internship with id %d doesn't exist", id));
-        }
+        checkInternshipExists(id);
         internship.setId(id);
         return internshipRepository.save(internship);
     }
@@ -59,6 +57,7 @@ public class InternshipServiceImpl implements InternshipService {
     @Transactional
     @Override
     public void delete(int id) {
+        checkInternshipExists(id);
         internshipRepository.deleteById(id);
     }
 
@@ -135,4 +134,9 @@ public class InternshipServiceImpl implements InternshipService {
         }
     }
 
+    private void checkInternshipExists(int internshipId) {
+        if (!internshipRepository.existsById(internshipId)) {
+            throw new ResourceNotFoundException(String.format("Internship with id %d doesn't exists", internshipId));
+        }
+    }
 }

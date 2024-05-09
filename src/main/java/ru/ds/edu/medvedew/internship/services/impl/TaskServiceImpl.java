@@ -36,9 +36,7 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     @Override
     public Task update(int id, Task task) {
-        if (!taskRepository.existsById(id)) {
-            throw new ResourceNotFoundException(String.format("Task with id %d doesn't exists", id));
-        }
+        checkTaskExists(id);
         task.setId(id);
         return taskRepository.save(task);
     }
@@ -46,6 +44,13 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     @Override
     public void delete(int id) {
+        checkTaskExists(id);
         taskRepository.deleteById(id);
+    }
+
+    private void checkTaskExists(int taskId) {
+        if (!taskRepository.existsById(taskId)) {
+            throw new ResourceNotFoundException(String.format("Task with id %d doesn't exists", taskId));
+        }
     }
 }
