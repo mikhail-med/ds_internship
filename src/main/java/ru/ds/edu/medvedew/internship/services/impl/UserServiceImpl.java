@@ -46,16 +46,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User update(int id, User user) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException(String.format("User with id %d doesn't exists", id));
-        }
+        checkUserExists(id);
         user.setId(id);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     @Transactional
     @Override
     public void delete(int id) {
+        checkUserExists(id);
         userRepository.deleteById(id);
     }
 
@@ -94,6 +94,12 @@ public class UserServiceImpl implements UserService {
         Set<Role> userRoles = user.getRoles();
         userRoles.add(role);
         userRepository.save(user);
+    }
+
+    private void checkUserExists(int userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException(String.format("User with id %d doesn't exists", userId));
+        }
     }
 
 }
