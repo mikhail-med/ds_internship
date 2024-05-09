@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.dto.LessonWithTasksDto;
+import ru.ds.edu.medvedew.internship.dto.TaskStatusDto;
 import ru.ds.edu.medvedew.internship.dto.UserTaskProgressDto;
+import ru.ds.edu.medvedew.internship.dto.UserWithTasksDto;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceCantBeUpdated;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.*;
@@ -16,6 +18,7 @@ import ru.ds.edu.medvedew.internship.services.UserInternshipService;
 import ru.ds.edu.medvedew.internship.services.UserService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -140,16 +143,54 @@ public class InternshipServiceImpl implements InternshipService {
         return lessonWithTasksDtos;
     }
 
+    @Override
+    public List<UserWithTasksDto> getInternshipProgress(int internshipId) {
+        List<UserWithTasksDto> userWithTasksDtos = new ArrayList<>();
+        List<User> internshipParticipants = getAllParticipants(internshipId);
+        List<Task> internshipTasks = getInternshipTasks(internshipId);
+
+        for (User participant : internshipParticipants) {
+            UserWithTasksDto userWithTasksDto = mapToUserWithTasksDto(participant);
+            Set<UserTask> userSolutions = participant.getUserTasks();
+            List<TaskStatusDto> userTasksWithStatus = getUserTaskWithStatusDtos(userSolutions, internshipTasks);
+            userWithTasksDto.setTasks(userTasksWithStatus);
+            userWithTasksDtos.add(userWithTasksDto);
+        }
+
+        return userWithTasksDtos;
+    }
+
+    private List<Task> getInternshipTasks(int internshipId) {
+        List<Lesson> internshipLessons = getAllLessons(internshipId);
+        return internshipLessons.stream()
+                .flatMap(lesson -> lesson.getTask().stream())
+                .collect(Collectors.toList());
+    }
+
+    private List<TaskStatusDto> getUserTaskWithStatusDtos(Set<UserTask> userSolutions, List<Task> internshipTasks) {
+        List<TaskStatusDto> userTasks = new ArrayList<>();
+        for (Task internshipTask : internshipTasks) {
+            TaskStatusDto taskStatusDto = mapToTaskStatusDto(internshipTask);
+
+            Optional<UserTask> userSolution = findLastUserSolutionForTask(userSolutions, internshipTask.getId());
+            if (userSolution.isPresent()) {
+                taskStatusDto.setTaskStatus(userSolution.get().getStatus());
+            } else {
+                taskStatusDto.setTaskStatus(TaskStatus.UNCHECKED);
+            }
+
+            userTasks.add(taskStatusDto);
+        }
+        return userTasks;
+    }
+
     private LessonWithTasksDto toLessonWithTaskDto(Lesson lesson, int userId, Set<UserTask> userSolutions) {
         LessonWithTasksDto lessonWithTasksDto = mapToLessonWithTasksDto(lesson);
         List<UserTaskProgressDto> userTaskProgressDtos = new ArrayList<>();
         Set<Task> lessonTasks = lesson.getTask();
 
         for (Task task : lessonTasks) {
-            // последнее проверенное решение для этой задачи
-            Optional<UserTask> solution = userSolutions.stream().filter(userTask ->
-                            userTask.getTask().getId() == task.getId())
-                    .max((ut1, ut2) -> ut1.getCommitCreatedAt().after(ut2.getCommitCreatedAt()) ? 1 : -1);
+            Optional<UserTask> solution = findLastUserSolutionForTask(userSolutions, task.getId());
 
             if (solution.isPresent()) {
                 UserTask userTask = solution.get();
@@ -162,6 +203,19 @@ public class InternshipServiceImpl implements InternshipService {
         }
         lessonWithTasksDto.setUserTasks(userTaskProgressDtos);
         return lessonWithTasksDto;
+    }
+
+    /**
+     * Поиск последнего решения пользвателя для задачи
+     *
+     * @param userSolutions - результаты проверки задач пользователя
+     * @param taskId        - id задачи
+     * @return результат проверки решения задачи с последней датой коммита
+     */
+    private Optional<UserTask> findLastUserSolutionForTask(Set<UserTask> userSolutions, int taskId) {
+        return userSolutions.stream().filter(userTask ->
+                        userTask.getTask().getId() == taskId)
+                .max((ut1, ut2) -> ut1.getCommitCreatedAt().after(ut2.getCommitCreatedAt()) ? 1 : -1);
     }
 
     private LessonWithTasksDto mapToLessonWithTasksDto(Lesson lesson) {
@@ -178,6 +232,18 @@ public class InternshipServiceImpl implements InternshipService {
         userTaskProgressDto.setTaskId(taskId);
         userTaskProgressDto.setStatus(taskStatus);
         return userTaskProgressDto;
+    }
+
+    private UserWithTasksDto mapToUserWithTasksDto(User user) {
+        UserWithTasksDto userWithTasksDto = new UserWithTasksDto();
+        userWithTasksDto.setUserId(user.getId());
+        return userWithTasksDto;
+    }
+
+    private TaskStatusDto mapToTaskStatusDto(Task task) {
+        TaskStatusDto taskStatusDto = new TaskStatusDto();
+        taskStatusDto.setTaskId(task.getId());
+        return taskStatusDto;
     }
 
 }

@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.ds.edu.medvedew.internship.dto.InternshipDto;
-import ru.ds.edu.medvedew.internship.dto.LessonDto;
-import ru.ds.edu.medvedew.internship.dto.LessonWithTasksDto;
-import ru.ds.edu.medvedew.internship.dto.UserSmallDto;
+import ru.ds.edu.medvedew.internship.dto.*;
 import ru.ds.edu.medvedew.internship.models.Internship;
 import ru.ds.edu.medvedew.internship.services.InternshipService;
 import ru.ds.edu.medvedew.internship.utils.mappers.InternshipMapper;
@@ -89,7 +86,13 @@ public class InternshipController {
 
     @GetMapping("/{internshipId}/progress/user/{userId}")
     @ApiOperation("Получить успеваемость пользователя на стажировке")
-    public List<LessonWithTasksDto> getInternshipProgress(@PathVariable("userId") int userId, @PathVariable("internshipId") int internshipId) {
+    public List<LessonWithTasksDto> getInternshipUserProgress(@PathVariable("userId") int userId, @PathVariable("internshipId") int internshipId) {
         return internshipService.getInternshipProgressForUser(internshipId, userId);
+    }
+
+    @GetMapping("/{internshipId}/progress")
+    @ApiOperation("Получить ведомость по стажировке")
+    public List<UserWithTasksDto> getInternshipProgress(@PathVariable("internshipId") int internshipId) {
+        return internshipService.getInternshipProgress(internshipId);
     }
 }
