@@ -7,6 +7,7 @@ import ru.ds.edu.medvedew.internship.dto.LessonWithTasksDto;
 import ru.ds.edu.medvedew.internship.dto.TaskStatusDto;
 import ru.ds.edu.medvedew.internship.dto.UserTaskProgressDto;
 import ru.ds.edu.medvedew.internship.dto.UserWithTasksDto;
+import ru.ds.edu.medvedew.internship.exceptions.UserNotInternshipParticipant;
 import ru.ds.edu.medvedew.internship.models.Lesson;
 import ru.ds.edu.medvedew.internship.models.Task;
 import ru.ds.edu.medvedew.internship.models.User;
@@ -31,6 +32,7 @@ public class ProgressServiceImpl implements ProgressService {
 
     @Override
     public List<LessonWithTasksDto> getInternshipProgressForUser(int internshipId, int userId) {
+        checkUserInternshipParticipant(internshipId, userId);
         List<LessonWithTasksDto> lessonWithTasksDtos = new ArrayList<>();
         List<Lesson> internshipLessons = internshipService.getAllLessons(internshipId);
         User user = userService.getById(userId);
@@ -120,5 +122,15 @@ public class ProgressServiceImpl implements ProgressService {
         return userSolutions.stream().filter(userTask ->
                         userTask.getTask().getId() == taskId)
                 .max((ut1, ut2) -> ut1.getCommitCreatedAt().after(ut2.getCommitCreatedAt()) ? 1 : -1);
+    }
+
+    private void checkUserInternshipParticipant(int internshipId, int userId) {
+        if (!internshipService.isUserActiveInternshipParticipant(internshipId, userId)) {
+            throw new UserNotInternshipParticipant(
+                    String.format("user with id %d isn't participant of internship with id %d",
+                            userId,
+                            internshipId)
+            );
+        }
     }
 }

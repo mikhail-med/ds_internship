@@ -15,6 +15,7 @@ import ru.ds.edu.medvedew.internship.services.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -94,6 +95,11 @@ public class UserServiceImpl implements UserService {
         Set<Role> userRoles = user.getRoles();
         userRoles.add(role);
         userRepository.save(user);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String name) {
+        return userRepository.findByUsername(name);
     }
 
     private void checkUserExists(int userId) {

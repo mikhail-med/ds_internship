@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import ru.ds.edu.medvedew.internship.models.User;
-import ru.ds.edu.medvedew.internship.repositories.UserRepository;
+import ru.ds.edu.medvedew.internship.services.UserService;
 
 import java.util.Optional;
 
@@ -16,10 +16,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class UserIdValidator {
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     public boolean isSameId(Authentication authentication, Integer id) {
-        Optional<User> authenticatedUser = userRepository.findByUsername(authentication.getName());
+        Optional<User> authenticatedUser = userService.findByUsername(authentication.getName());
         if (authenticatedUser.isEmpty()) {
             log.warn("Anonymous user tried to access data of user with id {}", id);
             return false;

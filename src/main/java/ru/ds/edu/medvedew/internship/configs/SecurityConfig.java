@@ -10,14 +10,12 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.ds.edu.medvedew.internship.security.UserIdValidator;
 import ru.ds.edu.medvedew.internship.services.impl.UserAuthDetailsService;
 
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserAuthDetailsService userDetailsService;
-    private final UserIdValidator userIdValidator;
 
     @Override
     public void configure(AuthenticationManagerBuilder builder) throws Exception {

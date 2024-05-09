@@ -113,6 +113,13 @@ public class InternshipServiceImpl implements InternshipService {
         return new ArrayList<>(internship.getLessons());
     }
 
+    @Override
+    public boolean isUserActiveInternshipParticipant(int internshipId, int userId) {
+        return userInternshipService.getAllWithStatusOnInternship(UserInternshipStatus.INTERNSHIP_PARTICIPANT, internshipId)
+                .stream()
+                .anyMatch(userInternship -> userInternship.getUser().getId() == userId);
+    }
+
     /**
      * проверка того, что срок подачи заявок не истёк
      *

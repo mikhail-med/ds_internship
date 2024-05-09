@@ -5,6 +5,7 @@ import ru.ds.edu.medvedew.internship.models.Message;
 import ru.ds.edu.medvedew.internship.models.User;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Сервис для пользователей
@@ -46,8 +47,17 @@ public interface UserService {
 
     /**
      * Добавить пользователю роль
+     *
      * @param roleId - роль
      * @param id     - id пользователя
      */
     void addRoleToUser(int roleId, int id);
+
+    /**
+     * Поиск пользователя по username
+     *
+     * @param name - имя пользователя
+     * @return пользователь
+     */
+    Optional<User> findByUsername(String name);
 }

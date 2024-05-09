@@ -9,6 +9,7 @@ import ru.ds.edu.medvedew.internship.dto.ExceptionDto;
 import ru.ds.edu.medvedew.internship.exceptions.GitlabUserCantBeCreated;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceCantBeUpdated;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
+import ru.ds.edu.medvedew.internship.exceptions.UserNotInternshipParticipant;
 
 import java.util.Date;
 
@@ -31,6 +32,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler
     public ResponseEntity<ExceptionDto> gitlabUserCantBeCreated(GitlabUserCantBeCreated e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage(), new Date()));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ExceptionDto> gitlabUserCantBeCreated(UserNotInternshipParticipant e) {
         log.error(e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage(), new Date()));

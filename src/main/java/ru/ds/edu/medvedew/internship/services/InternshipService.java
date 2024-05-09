@@ -43,4 +43,10 @@ public interface InternshipService {
      */
     List<Lesson> getAllLessons(int internshipId);
 
+    /**
+     * @param internshipId - id стажировки
+     * @param userId       - id пользователя
+     * @return true - если user участник стажировки (проходит сейчас)
+     */
+    boolean isUserActiveInternshipParticipant(int internshipId, int userId);
 }
