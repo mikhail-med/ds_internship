@@ -14,6 +14,7 @@ import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabCommit;
 import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabUserCreateDto;
 import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabUserDto;
 import ru.ds.edu.medvedew.internship.dto.gitlab.ProjectDto;
+import ru.ds.edu.medvedew.internship.exceptions.checked.gitlab.GitlabClientException;
 import ru.ds.edu.medvedew.internship.services.gitlab.GitlabClient;
 
 import java.net.URI;
@@ -30,7 +31,8 @@ public class GitlabClientImpl implements GitlabClient {
     private String gitlabUrl;
 
     @Override
-    public boolean forkProject(String projectPathWithNamespace, String toNamespace, String privateToken) {
+    public void forkProject(String projectPathWithNamespace, String toNamespace, String privateToken)
+            throws GitlabClientException {
         // преобразование из user/project в user%2Fproject
         String projectPathEncoded = URLEncoder.encode(projectPathWithNamespace, StandardCharsets.UTF_8);
         String url = gitlabUrl + "/api/v4/projects/" + projectPathEncoded
@@ -46,15 +48,15 @@ public class GitlabClientImpl implements GitlabClient {
         } catch (Exception e) {
             log.warn("fork project with path {} went wrong. Exception: {}",
                     projectPathWithNamespace, e.getMessage());
-            return false;
+            throw new GitlabClientException(e);
         }
-        return true;
     }
 
     @Override
-    public boolean createUser(String name, String username, String email, String password, String privateToken) {
+    public void createUser(String name, String username, String email, String password, String privateToken)
+            throws GitlabClientException {
         String url = gitlabUrl + "/api/v4/users";
-        GitlabUserCreateDto gitlabUserCreateDto = getDto(name, username, email, password);
+        GitlabUserCreateDto gitlabUserCreateDto = new GitlabUserCreateDto(name, email, username, password);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("PRIVATE-TOKEN", privateToken);
@@ -65,14 +67,13 @@ public class GitlabClientImpl implements GitlabClient {
         } catch (Exception e) {
             log.error("Create gitlab user for user with username {} went wrong. Exception: {}", username,
                     e.getMessage());
-            return false;
+            throw new GitlabClientException(e);
         }
-
-        return true;
     }
 
     @Override
-    public List<GitlabCommit> getCommitsForProject(String projectPathWithNamespace, String privateToken) {
+    public List<GitlabCommit> getCommitsForProject(String projectPathWithNamespace, String privateToken)
+            throws GitlabClientException {
         String projectPathEncoded = URLEncoder.encode(projectPathWithNamespace, StandardCharsets.UTF_8);
         String url = gitlabUrl + "/api/v4/projects/" + projectPathEncoded + "/repository/commits";
 
@@ -88,16 +89,8 @@ public class GitlabClientImpl implements GitlabClient {
         } catch (Exception e) {
             log.error("Get gitlab repository commits with path {} went wrong. Exception: {}", projectPathEncoded,
                     e.getMessage());
-            return null;
+            throw new GitlabClientException(e);
         }
     }
 
-    private GitlabUserCreateDto getDto(String name, String username, String email, String password) {
-        GitlabUserCreateDto gitlabUserCreateDto = new GitlabUserCreateDto();
-        gitlabUserCreateDto.setName(name);
-        gitlabUserCreateDto.setEmail(email);
-        gitlabUserCreateDto.setUsername(username);
-        gitlabUserCreateDto.setPassword(password);
-        return gitlabUserCreateDto;
-    }
 }

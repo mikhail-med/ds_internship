@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.ds.edu.medvedew.internship.dto.UserTaskCommit;
 import ru.ds.edu.medvedew.internship.dto.gitlab.GitlabCommit;
 import ru.ds.edu.medvedew.internship.exceptions.GitlabUserCantBeCreated;
+import ru.ds.edu.medvedew.internship.exceptions.checked.gitlab.GitlabClientException;
 import ru.ds.edu.medvedew.internship.models.*;
 import ru.ds.edu.medvedew.internship.models.statuses.TaskStatus;
 import ru.ds.edu.medvedew.internship.models.statuses.UserInternshipStatus;
@@ -43,9 +44,10 @@ public class GitlabServiceImpl implements GitlabService {
             if (participant.getStatus().equals(UserInternshipStatus.INTERNSHIP_PARTICIPANT)) {
                 User user = participant.getUser();
                 for (Task task : lessonTasks) {
-                    boolean isForked = gitlabClient.forkProject(task.getRepository(), user.getUsername(),
-                            privateToken);
-                    if (!isForked) {
+                    try {
+                        gitlabClient.forkProject(task.getRepository(), user.getUsername(),
+                                privateToken);
+                    } catch (GitlabClientException e) {
                         writeMessagesToAdminAboutNoForked(admins, task.getName(), user.getId());
                     }
                 }
@@ -61,16 +63,15 @@ public class GitlabServiceImpl implements GitlabService {
     public void createGitlabAccountForUser(int userId, String privateToken) {
         User user = userService.getById(userId);
         String password = UUID.randomUUID().toString();
-        boolean isUserCreated = gitlabClient.createUser(user.getName(),
-                user.getUsername(),
-                user.getContacts().getEmail(),
-                password,
-                privateToken);
-
-        if (isUserCreated) {
+        try {
+            gitlabClient.createUser(user.getName(),
+                    user.getUsername(),
+                    user.getContacts().getEmail(),
+                    password,
+                    privateToken);
             messageService.sendMessageFromUserToUserWithText(1, userId,
                     "Password for your gitlab account: " + password);
-        } else {
+        } catch (GitlabClientException e) {
             log.error("user.id = {}. user's gitlab account isn't created", userId);
             throw new GitlabUserCantBeCreated(String.format("gitlab account for user with id %d cant be created",
                     userId));
@@ -97,8 +98,7 @@ public class GitlabServiceImpl implements GitlabService {
                 // если задача ещё не принята
                 if (userTaskSolutions.stream().noneMatch(userTask -> userTask.getStatus().equals(TaskStatus.PASSED))) {
                     // получаем коммиты для задачи
-                    List<GitlabCommit> commits = gitlabClient.getCommitsForProject(
-                            getRepositoryNameForUsername(user.getUsername(), task.getRepository()),
+                    List<GitlabCommit> commits = tryToGetCommitsForProject(user.getUsername(), task.getRepository(),
                             privateToken);
                     // последний коммит по дате создания
                     Optional<GitlabCommit> lastCommit = getLastCreatedCommit(commits);
@@ -119,6 +119,16 @@ public class GitlabServiceImpl implements GitlabService {
             }
         }
         return lastCommits;
+    }
+
+    private List<GitlabCommit> tryToGetCommitsForProject(String username, String taskRepository, String privateToken) {
+        try {
+            return gitlabClient.getCommitsForProject(
+                    getRepositoryNameForUsername(username, taskRepository),
+                    privateToken);
+        } catch (GitlabClientException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void writeMessagesToAdminAboutNoForked(Set<User> admins, String taskName, int participantId) {
