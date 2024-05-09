@@ -3,22 +3,19 @@ package ru.ds.edu.medvedew.internship.services.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.ds.edu.medvedew.internship.dto.LessonWithTasksDto;
+import ru.ds.edu.medvedew.internship.dto.UserTaskProgressDto;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceCantBeUpdated;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
-import ru.ds.edu.medvedew.internship.models.Internship;
-import ru.ds.edu.medvedew.internship.models.Lesson;
-import ru.ds.edu.medvedew.internship.models.User;
-import ru.ds.edu.medvedew.internship.models.UserInternship;
+import ru.ds.edu.medvedew.internship.models.*;
+import ru.ds.edu.medvedew.internship.models.statuses.TaskStatus;
 import ru.ds.edu.medvedew.internship.models.statuses.UserInternshipStatus;
 import ru.ds.edu.medvedew.internship.repositories.InternshipRepository;
 import ru.ds.edu.medvedew.internship.services.InternshipService;
 import ru.ds.edu.medvedew.internship.services.UserInternshipService;
 import ru.ds.edu.medvedew.internship.services.UserService;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 @Service
@@ -127,4 +124,60 @@ public class InternshipServiceImpl implements InternshipService {
             );
         }
     }
+
+    @Override
+    public List<LessonWithTasksDto> getInternshipProgressForUser(int internshipId, int userId) {
+        List<LessonWithTasksDto> lessonWithTasksDtos = new ArrayList<>();
+        List<Lesson> internshipLessons = getAllLessons(internshipId);
+        User user = userService.getById(userId);
+        // решения которые уже предоставлял пользователь
+        Set<UserTask> userSolutions = user.getUserTasks();
+
+        for (Lesson lesson : internshipLessons) {
+            lessonWithTasksDtos.add(toLessonWithTaskDto(lesson, userId, userSolutions));
+        }
+
+        return lessonWithTasksDtos;
+    }
+
+    private LessonWithTasksDto toLessonWithTaskDto(Lesson lesson, int userId, Set<UserTask> userSolutions) {
+        LessonWithTasksDto lessonWithTasksDto = mapToLessonWithTasksDto(lesson);
+        List<UserTaskProgressDto> userTaskProgressDtos = new ArrayList<>();
+        Set<Task> lessonTasks = lesson.getTask();
+
+        for (Task task : lessonTasks) {
+            // последнее проверенное решение для этой задачи
+            Optional<UserTask> solution = userSolutions.stream().filter(userTask ->
+                            userTask.getTask().getId() == task.getId())
+                    .max((ut1, ut2) -> ut1.getCommitCreatedAt().after(ut2.getCommitCreatedAt()) ? 1 : -1);
+
+            if (solution.isPresent()) {
+                UserTask userTask = solution.get();
+                userTaskProgressDtos.add(toUserTaskProgressDto(userTask.getUser().getId(),
+                        userTask.getTask().getId(),
+                        userTask.getStatus()));
+            } else {
+                userTaskProgressDtos.add(toUserTaskProgressDto(userId, task.getId(), TaskStatus.UNCHECKED));
+            }
+        }
+        lessonWithTasksDto.setUserTasks(userTaskProgressDtos);
+        return lessonWithTasksDto;
+    }
+
+    private LessonWithTasksDto mapToLessonWithTasksDto(Lesson lesson) {
+        LessonWithTasksDto lessonWithTasksDto = new LessonWithTasksDto();
+        lessonWithTasksDto.setId(lesson.getId());
+        lessonWithTasksDto.setName(lesson.getName());
+        lessonWithTasksDto.setInternshipId(lesson.getInternship().getId());
+        return lessonWithTasksDto;
+    }
+
+    private UserTaskProgressDto toUserTaskProgressDto(int userId, int taskId, TaskStatus taskStatus) {
+        UserTaskProgressDto userTaskProgressDto = new UserTaskProgressDto();
+        userTaskProgressDto.setUserId(userId);
+        userTaskProgressDto.setTaskId(taskId);
+        userTaskProgressDto.setStatus(taskStatus);
+        return userTaskProgressDto;
+    }
+
 }

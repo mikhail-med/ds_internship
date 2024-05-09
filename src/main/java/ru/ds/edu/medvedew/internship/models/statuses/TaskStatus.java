@@ -11,5 +11,9 @@ public enum TaskStatus {
     /**
      * Не принята
      */
-    FAILED
+    FAILED,
+    /**
+     * Не отправлен (или не проверен)
+     */
+    UNCHECKED
 }

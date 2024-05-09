@@ -1,5 +1,6 @@
 package ru.ds.edu.medvedew.internship.services;
 
+import ru.ds.edu.medvedew.internship.dto.LessonWithTasksDto;
 import ru.ds.edu.medvedew.internship.models.Internship;
 import ru.ds.edu.medvedew.internship.models.Lesson;
 import ru.ds.edu.medvedew.internship.models.User;
@@ -42,4 +43,15 @@ public interface InternshipService {
      * @return все занятия стажировки с id = internshipId
      */
     List<Lesson> getAllLessons(int internshipId);
+
+    /**
+     * Получить успеваемость пользователя для стажировки.
+     * Успеваемость включает в себя список занятий стажировки
+     * у которых есть список задач со статусом решения пользователя
+     *
+     * @param internshipId - id стажировки
+     * @param userId       - id пользователя
+     * @return список занятий с задачами и их статусом решения
+     */
+    List<LessonWithTasksDto> getInternshipProgressForUser(int internshipId, int userId);
 }
