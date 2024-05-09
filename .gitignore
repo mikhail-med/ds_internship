@@ -3,4 +3,3 @@ target/
 mvnw
 mvnw.cmd
 data/
-src/main/resources/application.properties
