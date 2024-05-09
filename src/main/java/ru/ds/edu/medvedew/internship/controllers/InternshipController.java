@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.ds.edu.medvedew.internship.dto.*;
 import ru.ds.edu.medvedew.internship.models.Internship;
 import ru.ds.edu.medvedew.internship.services.InternshipService;
+import ru.ds.edu.medvedew.internship.services.ProgressService;
 import ru.ds.edu.medvedew.internship.utils.mappers.InternshipMapper;
 import ru.ds.edu.medvedew.internship.utils.mappers.LessonMapper;
 import ru.ds.edu.medvedew.internship.utils.mappers.UserMapper;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InternshipController {
     private final InternshipService internshipService;
+    private final ProgressService progressService;
     private final InternshipMapper INTERNSHIP_MAPPER = InternshipMapper.MAPPER;
     private final UserMapper USER_MAPPER = UserMapper.MAPPER;
     private final LessonMapper LESSON_MAPPER = LessonMapper.MAPPER;
@@ -87,12 +89,12 @@ public class InternshipController {
     @GetMapping("/{internshipId}/progress/user/{userId}")
     @ApiOperation("Получить успеваемость пользователя на стажировке")
     public List<LessonWithTasksDto> getInternshipUserProgress(@PathVariable("userId") int userId, @PathVariable("internshipId") int internshipId) {
-        return internshipService.getInternshipProgressForUser(internshipId, userId);
+        return progressService.getInternshipProgressForUser(internshipId, userId);
     }
 
     @GetMapping("/{internshipId}/progress")
     @ApiOperation("Получить ведомость по стажировке")
     public List<UserWithTasksDto> getInternshipProgress(@PathVariable("internshipId") int internshipId) {
-        return internshipService.getInternshipProgress(internshipId);
+        return progressService.getInternshipProgress(internshipId);
     }
 }
