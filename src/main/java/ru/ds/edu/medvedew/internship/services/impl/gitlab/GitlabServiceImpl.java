@@ -107,7 +107,12 @@ public class GitlabServiceImpl implements GitlabService {
                         Optional<UserTask> lastCheckedCommit = getLastUserTaskByCommitCreatedDate(userTaskSolutions);
                         if ((lastCheckedCommit.isEmpty()
                                 || commit.getCreatedAt().after(lastCheckedCommit.get().getCommitCreatedAt()))) {
-                            lastCommits.add(toUserTaskCommit(user, task, commit));
+                            UserTaskCommit userTaskCommit = new UserTaskCommit(task.getId(), task.getName(),
+                                    user.getUsername(),
+                                    commit.getCreatedAt(),
+                                    commit.getAuthorName(),
+                                    commit.getWebUrl());
+                            lastCommits.add(userTaskCommit);
                         }
                     });
                 }
@@ -122,17 +127,6 @@ public class GitlabServiceImpl implements GitlabService {
                     "fork task with name " + taskName + "  for participant with id "
                             + participantId + " went wrong");
         });
-    }
-
-    private UserTaskCommit toUserTaskCommit(User user, Task task, GitlabCommit gitlabCommit) {
-        UserTaskCommit userTaskCommit = new UserTaskCommit();
-        userTaskCommit.setTaskId(task.getId());
-        userTaskCommit.setTaskName(task.getName());
-        userTaskCommit.setCommitAuthor(gitlabCommit.getAuthorName());
-        userTaskCommit.setCommitUrl(gitlabCommit.getWebUrl());
-        userTaskCommit.setLastCommitCreatedAt(gitlabCommit.getCreatedAt());
-        userTaskCommit.setUsername(user.getUsername());
-        return userTaskCommit;
     }
 
     /**
