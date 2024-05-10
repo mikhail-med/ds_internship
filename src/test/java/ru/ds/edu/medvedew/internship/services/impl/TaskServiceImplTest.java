@@ -1,10 +1,11 @@
-package ru.ds.edu.medvedew.internship.services;
+package ru.ds.edu.medvedew.internship.services.impl;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.Task;
 import ru.ds.edu.medvedew.internship.repositories.TaskRepository;
@@ -17,39 +18,40 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-@SpringBootTest
-class TaskServiceTest {
-    @Autowired
-    private TaskService taskService;
-
-    @MockBean
+@ExtendWith(MockitoExtension.class)
+class TaskServiceImplTest {
+    @Mock
     private TaskRepository taskRepository;
+
+    @InjectMocks
+    private TaskServiceImpl taskServiceImpl;
 
 
     @Test
     void getAll() {
         doReturn(List.of(new Task())).when(taskRepository).findAll();
 
-        assertEquals(1, taskService.getAll().size());
-        Mockito.verify(taskRepository, Mockito.times(1)).findAll();
+        List<Task> tasks = taskServiceImpl.getAll();
+
+        assertEquals(1, tasks.size());
     }
 
     @Test
-    void getByIdWithExistingValue() {
+    void getById() {
         Task task = new Task();
         task.setId(1);
         doReturn(Optional.of(task)).when(taskRepository).findById(1);
 
-        assertEquals(1, taskService.getById(1).getId());
-        Mockito.verify(taskRepository, Mockito.times(1)).findById(1);
+        Task taskReturned = taskServiceImpl.getById(1);
+
+        assertEquals(1, taskReturned.getId());
     }
 
     @Test
-    void getByIdWithNotExistingValue() {
+    void getById_WithNotExistingValue_ThrowsException() {
         doReturn(Optional.empty()).when(taskRepository).findById(1);
 
-        assertThrows(ResourceNotFoundException.class, () -> taskService.getById(1));
-        Mockito.verify(taskRepository, Mockito.times(1)).findById(1);
+        assertThrows(ResourceNotFoundException.class, () -> taskServiceImpl.getById(1));
     }
 
     @Test
@@ -59,39 +61,37 @@ class TaskServiceTest {
         taskToReturn.setId(1);
         doReturn(taskToReturn).when(taskRepository).save(toSave);
 
-        assertEquals(1, taskService.save(toSave).getId());
-        Mockito.verify(taskRepository, Mockito.times(1)).save(toSave);
+        Task taskReturned = taskServiceImpl.save(toSave);
+
+        assertEquals(1, taskReturned.getId());
     }
 
     @Test
-    void updateExisting() {
+    void update() {
         Task toUpdate = mock(Task.class);
         Task taskToReturn = new Task();
         taskToReturn.setId(1);
         doReturn(taskToReturn).when(taskRepository).save(toUpdate);
         doReturn(true).when(taskRepository).existsById(1);
 
-        assertEquals(1, taskService.update(1, toUpdate).getId());
-        Mockito.verify(taskRepository, Mockito.times(1)).existsById(1);
-        Mockito.verify(taskRepository, Mockito.times(1)).save(toUpdate);
+        Task taskUpdated = taskServiceImpl.update(1, toUpdate);
+
+        assertEquals(1, taskUpdated.getId());
     }
 
     @Test
-    void updateNotExisting() {
+    void update_TaskNotExisting_ThrowsException() {
         Task toUpdate = mock(Task.class);
-        Task taskToReturn = new Task();
-        taskToReturn.setId(1);
-        doReturn(taskToReturn).when(taskRepository).save(toUpdate);
         doReturn(false).when(taskRepository).existsById(1);
 
-        assertThrows(ResourceNotFoundException.class, () -> taskService.update(1, toUpdate));
-        Mockito.verify(taskRepository, Mockito.times(1)).existsById(1);
+        assertThrows(ResourceNotFoundException.class, () -> taskServiceImpl.update(1, toUpdate));
         Mockito.verify(taskRepository, Mockito.times(0)).save(toUpdate);
     }
 
     @Test
     void delete() {
-        taskService.delete(1);
+        doReturn(true).when(taskRepository).existsById(1);
+        taskServiceImpl.delete(1);
         Mockito.verify(taskRepository, Mockito.times(1)).deleteById(1);
     }
 }

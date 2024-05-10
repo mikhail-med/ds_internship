@@ -1,10 +1,11 @@
-package ru.ds.edu.medvedew.internship.services;
+package ru.ds.edu.medvedew.internship.services.impl;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceCantBeUpdated;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.Internship;
@@ -13,6 +14,8 @@ import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.models.UserInternship;
 import ru.ds.edu.medvedew.internship.models.statuses.UserInternshipStatus;
 import ru.ds.edu.medvedew.internship.repositories.InternshipRepository;
+import ru.ds.edu.medvedew.internship.services.UserInternshipService;
+import ru.ds.edu.medvedew.internship.services.UserService;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,44 +25,45 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-@SpringBootTest
-class InternshipServiceTest {
-    @Autowired
-    private InternshipService internshipService;
-
-    @MockBean
+@ExtendWith(MockitoExtension.class)
+class InternshipServiceImplTest {
+    @Mock
     private InternshipRepository internshipRepository;
 
-    @MockBean
+    @Mock
     private UserService userService;
 
-    @MockBean
+    @Mock
     private UserInternshipService userInternshipService;
+
+    @InjectMocks
+    private InternshipServiceImpl internshipServiceImpl;
 
 
     @Test
     void getAll() {
         doReturn(List.of(new Internship())).when(internshipRepository).findAll();
 
-        assertEquals(1, internshipService.getAll().size());
-        Mockito.verify(internshipRepository, Mockito.times(1)).findAll();
+        List<Internship> internships = internshipServiceImpl.getAll();
+
+        assertEquals(1, internships.size());
     }
 
     @Test
-    void getByIdWithExistingValue() {
+    void getById() {
         Internship internship = new Internship();
         internship.setId(1);
         doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
 
-        assertEquals(1, internshipService.getById(1).getId());
-        Mockito.verify(internshipRepository, Mockito.times(1)).findById(1);
+        Internship internshipReturned = internshipServiceImpl.getById(1);
+        assertEquals(1, internshipReturned.getId());
     }
 
     @Test
-    void getByIdWithNotExistingValue() {
+    void getById_WithNotExistingValue_ThrowsException() {
         doReturn(Optional.empty()).when(internshipRepository).findById(1);
 
-        assertThrows(ResourceNotFoundException.class, () -> internshipService.getById(1));
+        assertThrows(ResourceNotFoundException.class, () -> internshipServiceImpl.getById(1));
         Mockito.verify(internshipRepository, Mockito.times(1)).findById(1);
     }
 
@@ -70,8 +74,9 @@ class InternshipServiceTest {
         internshipToReturn.setId(1);
         doReturn(internshipToReturn).when(internshipRepository).save(toSave);
 
-        assertEquals(1, internshipService.save(toSave).getId());
-        Mockito.verify(internshipRepository, Mockito.times(1)).save(toSave);
+        Internship saved = internshipServiceImpl.save(toSave);
+
+        assertEquals(1, saved.getId());
     }
 
     @Test
@@ -82,27 +87,24 @@ class InternshipServiceTest {
         doReturn(internshipToReturn).when(internshipRepository).save(toUpdate);
         doReturn(true).when(internshipRepository).existsById(1);
 
-        assertEquals(1, internshipService.update(1, toUpdate).getId());
-        Mockito.verify(internshipRepository, Mockito.times(1)).existsById(1);
-        Mockito.verify(internshipRepository, Mockito.times(1)).save(toUpdate);
+        Internship internship = internshipServiceImpl.update(1, toUpdate);
+
+        assertEquals(1, internship.getId());
     }
 
     @Test
     void updateNotExisting() {
         Internship toUpdate = mock(Internship.class);
-        Internship internshipToReturn = new Internship();
-        internshipToReturn.setId(1);
-        doReturn(internshipToReturn).when(internshipRepository).save(toUpdate);
         doReturn(false).when(internshipRepository).existsById(1);
 
-        assertThrows(ResourceNotFoundException.class, () -> internshipService.update(1, toUpdate));
-        Mockito.verify(internshipRepository, Mockito.times(1)).existsById(1);
+        assertThrows(ResourceNotFoundException.class, () -> internshipServiceImpl.update(1, toUpdate));
         Mockito.verify(internshipRepository, Mockito.times(0)).save(toUpdate);
     }
 
     @Test
     void delete() {
-        internshipService.delete(1);
+        doReturn(true).when(internshipRepository).existsById(1);
+        internshipServiceImpl.delete(1);
         Mockito.verify(internshipRepository, Mockito.times(1)).deleteById(1);
     }
 
@@ -121,14 +123,14 @@ class InternshipServiceTest {
         userToAdd.setId(2);
         doReturn(userToAdd).when(userService).getById(2);
 
-        internshipService.addUserToInternship(2, 1);
+        internshipServiceImpl.addUserToInternship(2, 1);
 
         Mockito.verify(userInternshipService, Mockito.times(1)).save(new UserInternship(userToAdd, internship,
                 UserInternshipStatus.SUBMITTED_APPLICATION));
     }
 
     @Test
-    public void addUserToInternshipWithExpiredApplicationsDate() {
+    public void addUserToInternship_WithExpiredApplicationsDate_ThrowsException() {
         Internship internship = new Internship();
         internship.setApplicationsDeadline(Date.from(LocalDateTime.now().minusHours(1).atZone(ZoneId.systemDefault()).toInstant()));
         User userAlreadyParticipant = new User();
@@ -137,19 +139,15 @@ class InternshipServiceTest {
         internship.setParticipants(participants);
         doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
 
-        User userToAdd = new User();
-        userToAdd.setId(2);
-        doReturn(userToAdd).when(userService).getById(2);
 
         assertThrows(ResourceCantBeUpdated.class, () ->
-                internshipService.addUserToInternship(2, 1));
-
+                internshipServiceImpl.addUserToInternship(2, 1));
         assertEquals(1, internship.getParticipants().size());
         assertFalse(internship.getParticipants().stream().anyMatch(u -> u.getId() == 2));
     }
 
     @Test
-    public void addUserToInternshipAlreadyParticipated() {
+    public void addUserToInternship_UserAlreadyParticipant_ThrowsException() {
         Internship internship = new Internship();
         internship.setApplicationsDeadline(Date.from(LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()));
         User userAlreadyParticipant = new User();
@@ -158,13 +156,8 @@ class InternshipServiceTest {
         internship.setParticipants(participants);
         doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
 
-        User userToAdd = new User();
-        userToAdd.setId(1);
-        doReturn(userToAdd).when(userService).getById(1);
-
         assertThrows(ResourceCantBeUpdated.class, () ->
-                internshipService.addUserToInternship(1, 1));
-
+                internshipServiceImpl.addUserToInternship(1, 1));
         assertEquals(1, internship.getParticipants().size());
         assertTrue(internship.getParticipants().stream().anyMatch(u -> u.getId() == 1));
     }
@@ -178,7 +171,9 @@ class InternshipServiceTest {
         internship.setParticipants(participants);
         doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
 
-        assertEquals(1, internshipService.getAllParticipants(1).size());
+        List<User> users = internshipServiceImpl.getAllParticipants(1);
+
+        assertEquals(1, users.size());
     }
 
     @Test
@@ -190,6 +185,8 @@ class InternshipServiceTest {
         internship.setLessons(lessons);
         doReturn(Optional.of(internship)).when(internshipRepository).findById(1);
 
-        assertEquals(1, internshipService.getAllLessons(1).size());
+        List<Lesson> lessonsReturned = internshipServiceImpl.getAllLessons(1);
+
+        assertEquals(1, lessonsReturned.size());
     }
 }

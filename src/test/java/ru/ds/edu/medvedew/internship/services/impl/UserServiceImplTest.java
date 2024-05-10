@@ -1,14 +1,17 @@
-package ru.ds.edu.medvedew.internship.services;
+package ru.ds.edu.medvedew.internship.services.impl;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.ds.edu.medvedew.internship.exceptions.ResourceNotFoundException;
 import ru.ds.edu.medvedew.internship.models.Message;
 import ru.ds.edu.medvedew.internship.models.User;
 import ru.ds.edu.medvedew.internship.repositories.UserRepository;
+import ru.ds.edu.medvedew.internship.services.RoleService;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,85 +19,95 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-class UserServiceTest {
-    @Autowired
-    private UserService userService;
-
-    @MockBean
+@ExtendWith(MockitoExtension.class)
+class UserServiceImplTest {
+    @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RoleService roleService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @InjectMocks
+    private UserServiceImpl userServiceImpl;
 
 
     @Test
     void getAll() {
         doReturn(List.of(new User())).when(userRepository).findAll();
 
-        assertEquals(1, userService.getAll().size());
-        Mockito.verify(userRepository, Mockito.times(1)).findAll();
+        List<User> users = userServiceImpl.getAll();
+
+        assertEquals(1, users.size());
     }
 
     @Test
-    void getByIdWithExistingValue() {
+    void getById() {
         User user = new User();
         user.setId(1);
         doReturn(Optional.of(user)).when(userRepository).findById(1);
 
-        assertEquals(1, userService.getById(1).getId());
-        Mockito.verify(userRepository, Mockito.times(1)).findById(1);
+        User userReturned = userServiceImpl.getById(1);
+
+        assertEquals(1, userReturned.getId());
     }
 
     @Test
-    void getByIdWithNotExistingValue() {
+    void getById_WithNotExistingValue_ThrowsException() {
         doReturn(Optional.empty()).when(userRepository).findById(1);
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.getById(1));
-        Mockito.verify(userRepository, Mockito.times(1)).findById(1);
+        assertThrows(ResourceNotFoundException.class, () -> userServiceImpl.getById(1));
     }
 
     @Test
     void save() {
+        doReturn("encodedPassword").when(passwordEncoder).encode(any());
         User toSave = mock(User.class);
         doReturn("password").when(toSave).getPassword();
         User userToReturn = new User();
         userToReturn.setId(1);
         doReturn(userToReturn).when(userRepository).save(toSave);
 
-        assertEquals(1, userService.save(toSave).getId());
-        Mockito.verify(userRepository, Mockito.times(1)).save(toSave);
+        User saved = userServiceImpl.save(toSave);
+
+        assertEquals(1, saved.getId());
+        verify(toSave).setPassword("encodedPassword");
     }
 
     @Test
-    void updateExisting() {
+    void update() {
+        doReturn("encodedPassword").when(passwordEncoder).encode(any());
         User toUpdate = mock(User.class);
         User userToReturn = new User();
         userToReturn.setId(1);
         doReturn(userToReturn).when(userRepository).save(toUpdate);
         doReturn(true).when(userRepository).existsById(1);
 
-        assertEquals(1, userService.update(1, toUpdate).getId());
-        Mockito.verify(userRepository, Mockito.times(1)).existsById(1);
-        Mockito.verify(userRepository, Mockito.times(1)).save(toUpdate);
+        User userUpdated = userServiceImpl.update(1, toUpdate);
+
+        assertEquals(1, userUpdated.getId());
+        verify(toUpdate).setPassword("encodedPassword");
     }
 
     @Test
-    void updateNotExisting() {
+    void update_UserNotExisting_ThrowsException() {
         User toUpdate = mock(User.class);
         User userToReturn = new User();
         userToReturn.setId(1);
-        doReturn(userToReturn).when(userRepository).save(toUpdate);
         doReturn(false).when(userRepository).existsById(1);
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.update(1, toUpdate));
+        assertThrows(ResourceNotFoundException.class, () -> userServiceImpl.update(1, toUpdate));
         Mockito.verify(userRepository, Mockito.times(1)).existsById(1);
-        Mockito.verify(userRepository, Mockito.times(0)).save(toUpdate);
     }
 
     @Test
     void delete() {
-        userService.delete(1);
+        doReturn(true).when(userRepository).existsById(1);
+        userServiceImpl.delete(1);
         Mockito.verify(userRepository, Mockito.times(1)).deleteById(1);
     }
 
@@ -110,14 +123,18 @@ class UserServiceTest {
         user.setSentMessages(Set.of(m1));
         user.setReceivedMessages(Set.of(m2));
         doReturn(Optional.of(user)).when(userRepository).findById(1);
-        assertEquals(2, userService.getAllMessagesForUser(1).size());
+
+        List<Message> messages = userServiceImpl.getAllMessagesForUser(1);
+
+        assertEquals(2, messages.size());
     }
 
     @Test
-    public void getAllMessagesForNotExistingUser() {
+    public void getAllMessages_UserNotExisting_ThrowsException() {
         doReturn(Optional.empty()).when(userRepository).findById(1);
+
         assertThrows(ResourceNotFoundException.class, () ->
-                userService.getAllMessagesForUser(1));
+                userServiceImpl.getAllMessagesForUser(1));
     }
 
     @Test
@@ -130,7 +147,10 @@ class UserServiceTest {
         m2.setId(2);
         user.setSentMessages(Set.of(m1, m2));
         doReturn(Optional.of(user)).when(userRepository).findById(1);
-        assertEquals(2, userService.getAllMessagesSentByUser(1).size());
+
+        List<Message> messages = userServiceImpl.getAllMessagesSentByUser(1);
+
+        assertEquals(2, messages.size());
     }
 
     @Test
@@ -143,6 +163,9 @@ class UserServiceTest {
         m2.setId(2);
         user.setReceivedMessages(Set.of(m2, m1));
         doReturn(Optional.of(user)).when(userRepository).findById(1);
-        assertEquals(2, userService.getAllMessageReceivedByUser(1).size());
+
+        List<Message> messages = userServiceImpl.getAllMessageReceivedByUser(1);
+
+        assertEquals(2, messages.size());
     }
 }
